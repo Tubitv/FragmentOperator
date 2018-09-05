@@ -205,12 +205,10 @@ object FragmentOperator {
     /**
      * Check if fragment class has given class level annotation
      */
-    private fun hasAnnotation(fragmentClass: Class<*>?, annotationClass: Class<*>?): Boolean {
-        if (fragmentClass != null && annotationClass != null) {
-            for (annotation in fragmentClass.annotations) {
-                if (annotation.annotationClass.java == annotationClass) {
-                    return true
-                }
+    private fun hasAnnotation(fragmentClass: Class<*>, annotationClass: Class<*>): Boolean {
+        for (annotation in fragmentClass.annotations) {
+            if (annotation.annotationClass.java == annotationClass) {
+                return true
             }
         }
         return false
