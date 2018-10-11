@@ -6,6 +6,7 @@ import android.support.annotation.IdRes
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
 import com.tubitv.fragmentoperator.activity.FoActivity
+import com.tubitv.fragmentoperator.dialog.FoDialog
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.fragment.SingleInstanceFragment
 import com.tubitv.fragmentoperator.logging.FoLog
@@ -136,6 +137,19 @@ object FragmentOperator {
         }
 
         fragmentTransaction.commit()
+    }
+
+    fun showDialog(dialog: FoDialog) {
+        // If activity is null, just return
+        val activity = getCurrentActivity() ?: return
+
+        // If activity is not active, we shouldn't show any fragment
+        if (!activity.isForeground()) {
+            // TODO: cache UI actions and resume later
+            return
+        }
+
+        dialog.show(activity.supportFragmentManager, dialog.getDialogTag())
     }
 
     /**
