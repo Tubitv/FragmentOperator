@@ -1,5 +1,6 @@
 package com.tubitv.fragments
 
+import android.arch.lifecycle.Lifecycle
 import android.content.Intent
 import android.os.Build
 import android.support.annotation.IdRes
@@ -90,7 +91,7 @@ object FragmentOperator {
         val activity = getCurrentActivity() ?: return
 
         // If activity is not active, we shouldn't show any fragment
-        if (!activity.isForeground()) {
+        if (!activity.isReadyForFragmentOperation()) {
             // TODO: cache UI actions and resume later
             return
         }
@@ -144,7 +145,7 @@ object FragmentOperator {
         val activity = getCurrentActivity() ?: return
 
         // If activity is not active, we shouldn't show any fragment
-        if (!activity.isForeground()) {
+        if (!activity.isReadyForFragmentOperation()) {
             // TODO: cache UI actions and resume later
             return
         }
@@ -163,14 +164,18 @@ object FragmentOperator {
             return false
         }
 
-        if (!activity.isForeground()) {
-            FoLog.d(TAG, "handle onBackPressed fail due to current activity is not in foreground")
+        if (!activity.isReadyForFragmentOperation()) {
+            FoLog.d(TAG, "handle onBackPressed fail due to current activity is not ready for fragment operation")
             return false
         }
 
         val currentFragment = getCurrentFragment() ?: kotlin.run {
             FoLog.d(TAG, "handle onBackPressed fail due to current fragment is null")
             return false
+        }
+
+        if (activity.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+
         }
 
         // When currently it's the last fragment, we should just go back to phone home screen
@@ -243,7 +248,7 @@ object FragmentOperator {
     private fun getCurrentFragment(@IdRes containerId: Int): FoFragment? {
         val activity = getCurrentActivity() ?: return null
 
-        if (!activity.isForeground()) {
+        if (!activity.isReadyForFragmentOperation()) {
             return null
         }
 
@@ -266,8 +271,8 @@ object FragmentOperator {
             return false
         }
 
-        if (!activity.isForeground()) {
-            FoLog.d(TAG, "popToFragment fail due to current activity is not in foreground")
+        if (!activity.isReadyForFragmentOperation()) {
+            FoLog.d(TAG, "popToFragment fail due to current activity is not ready for fragment operation")
             return false
         }
 
@@ -292,8 +297,8 @@ object FragmentOperator {
             return null
         }
 
-        if (!activity.isForeground()) {
-            FoLog.d(TAG, "findFragmentInBackStack fail due to current activity is not in foreground")
+        if (!activity.isReadyForFragmentOperation()) {
+            FoLog.d(TAG, "findFragmentInBackStack fail due to current activity is not ready for fragment operation")
             return null
         }
 
