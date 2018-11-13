@@ -96,6 +96,10 @@ object FragmentOperator {
             return
         }
 
+        if (containerId == 0) {
+            FoLog.d(TAG, "showFragment fail due to empty container id")
+        }
+
         if (clearStack) {
             activity.supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
