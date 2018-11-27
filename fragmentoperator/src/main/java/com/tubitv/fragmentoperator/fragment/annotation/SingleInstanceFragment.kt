@@ -1,4 +1,4 @@
-package com.tubitv.fragmentoperator.fragment
+package com.tubitv.fragmentoperator.fragment.annotation
 
 
 /**

@@ -1,6 +1,5 @@
 package com.tubitv.fragments
 
-import android.arch.lifecycle.Lifecycle
 import android.content.Intent
 import android.os.Build
 import android.support.annotation.IdRes
@@ -9,7 +8,7 @@ import android.support.v4.app.FragmentTransaction
 import com.tubitv.fragmentoperator.activity.FoActivity
 import com.tubitv.fragmentoperator.dialog.FoDialog
 import com.tubitv.fragmentoperator.fragment.FoFragment
-import com.tubitv.fragmentoperator.fragment.SingleInstanceFragment
+import com.tubitv.fragmentoperator.fragment.annotation.SingleInstanceFragment
 import com.tubitv.fragmentoperator.logging.FoLog
 import java.lang.ref.WeakReference
 
@@ -87,30 +86,53 @@ object FragmentOperator {
                      skipOnPop: Boolean,
                      @IdRes containerId: Int) {
 
+        if (containerId == 0) {
+            FoLog.d(TAG, "showFragment fail due to empty container id")
+            return
+        }
+
+        showFragment(getCurrentActivity()?.supportFragmentManager, fragment, clearStack, skipOnPop, containerId)
+    }
+
+    /**
+     * Show a fragment in a container with control of clearing previous back stack and setting fragment to be skipped on back
+     *
+     * @param fragmentManager FragmentManager to be used for displaying fragment
+     * @param fragment Fragment instance to be displayed
+     * @param clearStack Flag to clear back stack or not
+     * @param skipOnPop Flag for fragment to be skipped when pop back stack
+     * @param containerId Container resource ID to display the fragment
+     */
+    fun showFragment(fragmentManager: FragmentManager?,
+                     fragment: FoFragment,
+                     clearStack: Boolean,
+                     skipOnPop: Boolean,
+                     @IdRes containerId: Int) {
+
+        // If FragmentManager is null, just return
+        val fragmentManager = fragmentManager ?: return
+
         // If activity is null, just return
         val activity = getCurrentActivity() ?: return
 
-        // If activity is not active, we shouldn't show any fragment
+        // If activity is not active, we shouldn't show any fragment.
+        // We also use activity lifecycle to check if fragment ready for child fragment.
         if (!activity.isReadyForFragmentOperation()) {
             // TODO: cache UI actions and resume later
             return
         }
 
-        if (containerId == 0) {
-            FoLog.d(TAG, "showFragment fail due to empty container id")
-        }
-
         if (clearStack) {
-            activity.supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
 
-        val fragmentTransaction = activity.supportFragmentManager.beginTransaction()
+        val fragmentTransaction = fragmentManager.beginTransaction()
 
         // Fragment transition animation
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 
         // Handle single instance
-        val previousFragmentTagForOverride = handleSingleInstanceFragment(fragment)
+        val previousFragmentTagForOverride = handleSingleInstanceFragment(fragmentManager, fragment)
 
         val fragmentTag = fragment.getFragmentTag()
 
@@ -124,7 +146,7 @@ object FragmentOperator {
         // If back stack order has changed, we need check if previous fragment tag need to be overridden
         if (previousFragmentTagForOverride == null) {
 
-            val currentFragment = getCurrentFragment(containerId)
+            val currentFragment = getCurrentFragment(fragmentManager, containerId)
 
             if (currentFragment != null) {
                 if (currentFragment.skipOnPop) {
@@ -163,6 +185,7 @@ object FragmentOperator {
      * @return True if fragment pop back is performed
      */
     fun onBackPressed(): Boolean {
+        // TODO handle child fragment backstack
         val activity = getCurrentActivity() ?: kotlin.run {
             FoLog.d(TAG, "handle onBackPressed fail due to current activity is null")
             return false
@@ -173,14 +196,11 @@ object FragmentOperator {
             return false
         }
 
-        val currentFragment = getCurrentFragment() ?: kotlin.run {
-            FoLog.d(TAG, "handle onBackPressed fail due to current fragment is null")
-            return false
-        }
-
-        if (activity.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-
-        }
+        val currentFragment = getCurrentFragment(activity.supportFragmentManager, activity.getFragmentContainerResId())
+                ?: kotlin.run {
+                    FoLog.d(TAG, "handle onBackPressed fail due to current fragment is null")
+                    return false
+                }
 
         // When currently it's the last fragment, we should just go back to phone home screen
         if (activity.supportFragmentManager.backStackEntryCount == 1) {
@@ -193,10 +213,35 @@ object FragmentOperator {
 
         val previousFragmentTag = currentFragment.previousFragmentTag
         if (previousFragmentTag != null) {
-            return popToFragment(previousFragmentTag)
+            return popToFragment(activity.supportFragmentManager, previousFragmentTag)
         }
 
         return false
+    }
+
+    /**
+     * Get current fragment on the top of back stack
+     *
+     * @param fragmentManager Fragment manager instance to be used for look up
+     * @param containerId Container view id
+     */
+    fun getCurrentFragment(fragmentManager: FragmentManager?, @IdRes containerId: Int): FoFragment? {
+        val fragmentManager = fragmentManager ?: return null
+
+        val activity = getCurrentActivity() ?: return null
+
+        if (!activity.isReadyForFragmentOperation()) {
+            return null
+        }
+
+        val fragment = fragmentManager.findFragmentById(containerId)
+
+        if (fragment != null && fragment is FoFragment) {
+
+            return fragment
+        }
+
+        return null
     }
 
     private fun getCurrentActivity(): FoActivity? {
@@ -211,13 +256,13 @@ object FragmentOperator {
      * @param fragment The fragment instance to
      * @return Previous fragment tag of existing instance if exists in back stack
      */
-    private fun handleSingleInstanceFragment(fragment: FoFragment): String? {
+    private fun handleSingleInstanceFragment(fragmentManager: FragmentManager, fragment: FoFragment): String? {
         if (hasAnnotation(fragment::class.java, SingleInstanceFragment::class.java)) {
-            val frag = findFragmentInBackStack(fragment::class.java)
+            val frag = findFragmentInBackStack(fragmentManager, fragment::class.java)
             val previousFragmentTag = frag?.previousFragmentTag
             if (previousFragmentTag != null) {
                 // If we already have an instance in backstack, pop to the previous one and load the new instance later
-                popToFragment(previousFragmentTag)
+                popToFragment(fragmentManager, previousFragmentTag)
                 return frag.previousFragmentTag
             }
         }
@@ -238,38 +283,9 @@ object FragmentOperator {
     }
 
     /**
-     * Default container id to {@link R.id.activity_abstract_drawer_container}, since we
-     * are going to use single activity
-     */
-    private fun getCurrentFragment(): FoFragment? {
-        val activity = getCurrentActivity() ?: return null
-        return getCurrentFragment(activity.getFragmentContainerResId())
-    }
-
-    /**
-     * Get current fragment on the top of back stack
-     */
-    private fun getCurrentFragment(@IdRes containerId: Int): FoFragment? {
-        val activity = getCurrentActivity() ?: return null
-
-        if (!activity.isReadyForFragmentOperation()) {
-            return null
-        }
-
-        val fragment = activity.supportFragmentManager.findFragmentById(containerId)
-
-        if (fragment != null && fragment is FoFragment) {
-
-            return fragment
-        }
-
-        return null
-    }
-
-    /**
      * Pop to a fragment with specific tag
      */
-    private fun popToFragment(fragmentTag: String): Boolean {
+    private fun popToFragment(fragmentManager: FragmentManager, fragmentTag: String): Boolean {
         val activity = getCurrentActivity() ?: kotlin.run {
             FoLog.d(TAG, "popToFragment fail due to current activity is null")
             return false
@@ -280,9 +296,9 @@ object FragmentOperator {
             return false
         }
 
-        if (activity.supportFragmentManager.findFragmentByTag(fragmentTag) != null) {
+        if (fragmentManager.findFragmentByTag(fragmentTag) != null) {
             FoLog.d(TAG, "popToFragment found tag: $fragmentTag")
-            activity.supportFragmentManager.popBackStack(fragmentTag, 0)
+            fragmentManager.popBackStack(fragmentTag, 0)
             return true
         } else {
             FoLog.d(TAG, "popToFragment tag not found: $fragmentTag")
@@ -295,7 +311,7 @@ object FragmentOperator {
     /**
      * Find fragment instance with give fragment class
      */
-    private fun findFragmentInBackStack(fragmentClass: Class<*>): FoFragment? {
+    private fun findFragmentInBackStack(fragmentManager: FragmentManager, fragmentClass: Class<*>): FoFragment? {
         val activity = getCurrentActivity() ?: kotlin.run {
             FoLog.d(TAG, "findFragmentInBackStack fail due to current activity is null")
             return null
@@ -305,8 +321,6 @@ object FragmentOperator {
             FoLog.d(TAG, "findFragmentInBackStack fail due to current activity is not ready for fragment operation")
             return null
         }
-
-        val fragmentManager = activity.supportFragmentManager
 
         // Check visible fragments
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

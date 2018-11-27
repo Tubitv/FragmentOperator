@@ -1,7 +1,9 @@
 package com.tubitv.fragmentoperator.fragment
 
 import android.os.Bundle
+import android.support.annotation.IdRes
 import android.support.v4.app.Fragment
+import com.tubitv.fragments.FragmentOperator
 
 open class FoFragment : Fragment() {
     private val TAG = FoFragment::class.simpleName
@@ -44,4 +46,34 @@ open class FoFragment : Fragment() {
         }
         return mCurrentFragmentTag
     }
+
+    /**
+     * Add a initial child fragment.
+     *
+     * @param fragment    Fragment Instance
+     * @param containerId Fragment Container ID
+     */
+    fun addInitialChildFragment(fragment: FoFragment, containerId: Int) {
+        childFragmentManager.beginTransaction().add(containerId, fragment).commit()
+    }
+
+    /**
+     * Show a fragment in a container with control of clearing previous back stack and setting fragment to be skipped on back
+     *
+     * @param fragment Fragment instance to be displayed
+     * @param clearStack Flag to clear back stack or not
+     * @param skipOnPop Flag for fragment to be skipped when pop back stack
+     * @param containerId Container resource ID to display the fragment
+     */
+    fun showFragment(fragment: FoFragment,
+                     clearStack: Boolean,
+                     skipOnPop: Boolean,
+                     @IdRes containerId: Int) {
+        FragmentOperator.showFragment(childFragmentManager, fragment, clearStack, skipOnPop, containerId)
+    }
+
+    fun getCurrentChildFragment(@IdRes containerId: Int): FoFragment? {
+        return FragmentOperator.getCurrentFragment(childFragmentManager, containerId)
+    }
+
 }
