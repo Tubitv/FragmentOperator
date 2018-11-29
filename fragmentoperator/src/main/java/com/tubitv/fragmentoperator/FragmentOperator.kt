@@ -5,10 +5,12 @@ import android.os.Build
 import android.support.annotation.IdRes
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
+import com.tubitv.fragmentoperator.`interface`.TabsNavigator
 import com.tubitv.fragmentoperator.activity.FoActivity
 import com.tubitv.fragmentoperator.dialog.FoDialog
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.fragment.annotation.SingleInstanceFragment
+import com.tubitv.fragmentoperator.fragment.annotation.TabChildFragment
 import com.tubitv.fragmentoperator.logging.FoLog
 import java.lang.ref.WeakReference
 
@@ -28,12 +30,22 @@ object FragmentOperator {
     private val TAG = FragmentOperator::class.simpleName
 
     private var mActivityRef: WeakReference<FoActivity>? = null
+    private var mTabsNavigator: TabsNavigator? = null
+    private val mPendingChildFragmentList: MutableList<FoFragment> = ArrayList()
 
     /**
      * Set current active activity
      */
     fun setCurrentActivity(activity: FoActivity) {
         mActivityRef = WeakReference(activity)
+    }
+
+    fun registerTabsNavigator(tabsNavigator: TabsNavigator) {
+        mTabsNavigator = tabsNavigator
+    }
+
+    fun unregisterTabsNavigator() {
+        mTabsNavigator = null
     }
 
     /**
@@ -70,6 +82,29 @@ object FragmentOperator {
             FoLog.d(TAG, "showFragment fail due to current activity is null")
             return
         }
+
+        // check if this fragment belongs to a tab
+        if (hasAnnotation(fragment::class.java, TabChildFragment::class.java)) {
+
+            val tabsNavigator = mTabsNavigator
+
+            if (tabsNavigator == null) {
+                FoLog.d(TAG, "showFragment for tabChildFragment fail due to TabsNavigator is null")
+                return
+            }
+
+            val targetTabIndex = fragment::class.java.getAnnotation(TabChildFragment::class.java).tabIndex
+
+            // If tab index is not valid or matches current tab index, load fragment to current tab
+            if (!tabsNavigator.isTabIndexValid(targetTabIndex) || targetTabIndex == tabsNavigator.getCurrentTabIndex()) {
+                tabsNavigator.getCurrentContainerFragment()?.showChildFragment(fragment)
+            } else { // We need switch tab first then load child fragment
+                mPendingChildFragmentList.add(fragment)
+                tabsNavigator.switchToTab(targetTabIndex)
+            }
+            return
+        }
+
         showFragment(fragment, clearStack, skipOnPop, activity.getFragmentContainerResId())
     }
 
@@ -179,6 +214,15 @@ object FragmentOperator {
         dialog.show(activity.supportFragmentManager, dialog.getDialogTag())
     }
 
+    fun handlePendingChildFragments(containerFragment: FoFragment) {
+        if (!mPendingChildFragmentList.isEmpty()) {
+            for (fragment in mPendingChildFragmentList) {
+                containerFragment.showChildFragment(fragment)
+            }
+            mPendingChildFragmentList.clear()
+        }
+    }
+
     /**
      * Handle back pressed for fragment routing
      *
@@ -202,6 +246,21 @@ object FragmentOperator {
                     return false
                 }
 
+        val tabsNavigator = mTabsNavigator
+        val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
+        // Check if current tab has more than one fragments
+        if (tabsNavigator != null && currentContainerFragment != null) {
+            if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
+                val currentChildFragment = currentContainerFragment.getCurrentChildFragment()
+                if (currentChildFragment != null) {
+                    return popToPreviousFragment(currentChildFragment, currentContainerFragment.childFragmentManager)
+                }
+            } else if (tabsNavigator.getCurrentTabIndex() != 0) { // Check if tabs have navigation history TODO handle multiple tab history
+                tabsNavigator.switchToTab(0) // Switch to first tab
+                return true
+            }
+        }
+
         // When currently it's the last fragment, we should just go back to phone home screen
         if (activity.supportFragmentManager.backStackEntryCount == 1) {
             val pauseAppIntent = Intent(Intent.ACTION_MAIN)
@@ -211,11 +270,15 @@ object FragmentOperator {
             return true
         }
 
-        val previousFragmentTag = currentFragment.previousFragmentTag
-        if (previousFragmentTag != null) {
-            return popToFragment(activity.supportFragmentManager, previousFragmentTag)
-        }
+        // Pop main backstack
+        return popToPreviousFragment(currentFragment, activity.supportFragmentManager)
+    }
 
+    private fun popToPreviousFragment(fragment: FoFragment, fragmentManager: FragmentManager): Boolean {
+        val previousFragmentTag = fragment.previousFragmentTag
+        if (previousFragmentTag != null) {
+            return popToFragment(fragmentManager, previousFragmentTag)
+        }
         return false
     }
 
