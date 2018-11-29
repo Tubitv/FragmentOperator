@@ -54,7 +54,10 @@ open class FoFragment : Fragment() {
      * @param containerId Fragment Container ID
      */
     fun addInitialChildFragment(fragment: FoFragment, containerId: Int) {
-        childFragmentManager.beginTransaction().add(containerId, fragment).commit()
+        val fragmentTransaction = childFragmentManager.beginTransaction()
+        fragmentTransaction.add(containerId, fragment, fragment.getFragmentTag())
+        fragmentTransaction.addToBackStack(fragment.getFragmentTag())
+        fragmentTransaction.commit()
     }
 
     /**
@@ -65,11 +68,29 @@ open class FoFragment : Fragment() {
      * @param skipOnPop Flag for fragment to be skipped when pop back stack
      * @param containerId Container resource ID to display the fragment
      */
-    fun showFragment(fragment: FoFragment,
-                     clearStack: Boolean,
-                     skipOnPop: Boolean,
-                     @IdRes containerId: Int) {
+    fun showChildFragment(fragment: FoFragment,
+                          clearStack: Boolean,
+                          skipOnPop: Boolean,
+                          @IdRes containerId: Int) {
         FragmentOperator.showFragment(childFragmentManager, fragment, clearStack, skipOnPop, containerId)
+    }
+
+    /**
+     * Provide a method to show fragment directly without specific container config
+     *
+     * @param fragment    Fragment Instance
+     */
+    open fun showChildFragment(fragment: FoFragment) {
+        // Implement if needed
+    }
+
+    /**
+     * Provide a method to directly get current child fragment
+     *
+     * @return Current child fragment Instance
+     */
+    open fun getCurrentChildFragment(): FoFragment? {
+        return null
     }
 
     fun getCurrentChildFragment(@IdRes containerId: Int): FoFragment? {
