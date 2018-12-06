@@ -10,12 +10,14 @@ open class FoFragment : Fragment() {
 
     private val PREVIOUS_FRAGMENT_TAG = "previous_fragment_tag"
     private val CURRENT_FRAGMENT_TAG = "current_fragment_tag"
+    private val ROOT_CHILD_FRAGMENT_TAG = "root_child_fragment_tag"
     private val FRAGMENT_TAG_SEPERATOR = ":"
 
     var skipOnPop = false // Flag to mark if current instance should be skipped when pop back stack
     var previousFragmentTag: String? = null // Tag for fragment that will go to when pop back from current instance
 
     private var mCurrentFragmentTag: String? = null // Tag for current fragment instance
+    private var mRootChildFragmentTag: String? = null // Tag for root child fragment instance
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -23,6 +25,7 @@ open class FoFragment : Fragment() {
         // Save previous fragment tag and current fragment tag, so we don't lose them during fragment recreation
         outState.putString(PREVIOUS_FRAGMENT_TAG, previousFragmentTag)
         outState.putString(CURRENT_FRAGMENT_TAG, getFragmentTag())
+        outState.putString(ROOT_CHILD_FRAGMENT_TAG, mRootChildFragmentTag)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -30,6 +33,7 @@ open class FoFragment : Fragment() {
         if (savedInstanceState != null) {
             previousFragmentTag = savedInstanceState.getString(PREVIOUS_FRAGMENT_TAG)
             mCurrentFragmentTag = savedInstanceState.getString(CURRENT_FRAGMENT_TAG)
+            mRootChildFragmentTag = savedInstanceState.getString(ROOT_CHILD_FRAGMENT_TAG)
         }
     }
 
@@ -47,6 +51,16 @@ open class FoFragment : Fragment() {
         return mCurrentFragmentTag
     }
 
+
+    /**
+     * Get the tag of root child fragment instance if any
+     *
+     * @return Root child fragment Tag, null if there is no child fragment
+     */
+    fun getRootChildFragmentTag(): String? {
+        return mRootChildFragmentTag
+    }
+
     /**
      * Add a initial child fragment.
      *
@@ -58,6 +72,7 @@ open class FoFragment : Fragment() {
         fragmentTransaction.add(containerId, fragment, fragment.getFragmentTag())
         fragmentTransaction.addToBackStack(fragment.getFragmentTag())
         fragmentTransaction.commit()
+        mRootChildFragmentTag = fragment.getFragmentTag()
     }
 
     /**
