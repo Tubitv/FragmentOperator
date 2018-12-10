@@ -249,9 +249,15 @@ object FragmentOperator {
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null) {
+            val currentChildFragment = currentContainerFragment.getCurrentChildFragment()
+
+            // Check if current child fragment wants to handle back pressed
+            if (currentChildFragment != null && currentChildFragment.onBackPressed()) {
+                return true
+            }
+
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
-                val currentChildFragment = currentContainerFragment.getCurrentChildFragment()
                 if (currentChildFragment != null) {
                     return popToPreviousFragment(currentChildFragment, currentContainerFragment.childFragmentManager)
                 }
@@ -261,7 +267,12 @@ object FragmentOperator {
             }
         }
 
-        // When currently it's the last fragment, we should just go back to phone home screen
+        // Check if current fragment wants to handle back pressed
+        if (currentFragment.onBackPressed()) {
+            return true
+        }
+
+        // When currently it's the last fragment and it doesn't handle back pressed, we should just go back to phone home screen
         if (activity.supportFragmentManager.backStackEntryCount == 1) {
             val pauseAppIntent = Intent(Intent.ACTION_MAIN)
             pauseAppIntent.addCategory(Intent.CATEGORY_HOME)
