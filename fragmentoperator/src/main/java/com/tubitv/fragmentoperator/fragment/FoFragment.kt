@@ -18,6 +18,33 @@ open class FoFragment : Fragment() {
 
     private var mCurrentFragmentTag: String? = null // Tag for current fragment instance
     private var mRootChildFragmentTag: String? = null // Tag for root child fragment instance
+    
+    /**
+     * Provide a method to show fragment directly without specific container config
+     *
+     * @param fragment    Fragment Instance
+     */
+    open fun showChildFragment(fragment: FoFragment) {
+        // Implement if needed
+    }
+
+    /**
+     * Provide a method to directly get current child fragment
+     *
+     * @return Current child fragment Instance
+     */
+    open fun getCurrentChildFragment(): FoFragment? {
+        return null
+    }
+
+    /**
+     * Provide a method to let fragment handle back button pressed
+     *
+     * @return True if fragment has handled back button pressed
+     */
+    open fun onBackPressed(): Boolean {
+        return false
+    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -90,26 +117,9 @@ open class FoFragment : Fragment() {
         FragmentOperator.showFragment(childFragmentManager, fragment, clearStack, skipOnPop, containerId)
     }
 
-    /**
-     * Provide a method to show fragment directly without specific container config
-     *
-     * @param fragment    Fragment Instance
-     */
-    open fun showChildFragment(fragment: FoFragment) {
-        // Implement if needed
-    }
-
-    /**
-     * Provide a method to directly get current child fragment
-     *
-     * @return Current child fragment Instance
-     */
-    open fun getCurrentChildFragment(): FoFragment? {
-        return null
-    }
-
     fun getCurrentChildFragment(@IdRes containerId: Int): FoFragment? {
         return FragmentOperator.getCurrentFragment(childFragmentManager, containerId)
     }
+
 
 }
