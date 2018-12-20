@@ -24,7 +24,7 @@ android {
         targetSdkVersion 27
         versionCode 3
         versionName "1.1"
-        
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
@@ -52,7 +52,7 @@ repositories {
 }
 
 publish {
-    userOrg = 'hemingliu'
+    userOrg = 'hemingliu1113'
     groupId = 'com.tubitv'
     artifactId = 'fragmentoperator'
     publishVersion = '1.1'
