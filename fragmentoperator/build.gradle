@@ -1,17 +1,30 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.novoda.bintray-release'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.9'
+    }
+}
 
 android {
     compileSdkVersion 27
 
-
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 1
-        versionName "1.0"
-
+        versionCode 3
+        versionName "1.1"
+        
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
@@ -36,4 +49,13 @@ dependencies {
 }
 repositories {
     mavenCentral()
+}
+
+publish {
+    userOrg = 'hemingliu'
+    groupId = 'com.tubitv'
+    artifactId = 'fragmentoperator'
+    publishVersion = '1.1'
+    desc = 'Easy Android fragment management'
+    website = 'https://github.com/Tubitv/FragmentOperator'
 }
