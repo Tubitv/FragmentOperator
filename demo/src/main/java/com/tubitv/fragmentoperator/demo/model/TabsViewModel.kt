@@ -1,4 +1,4 @@
-package com.tubitv.views.viewmodels
+package com.tubitv.fragmentoperator.demo.model
 
 
 class TabsViewModel {

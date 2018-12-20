@@ -5,9 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.tubitv.fragmentoperator.R
-import com.tubitv.fragmentoperator.databinding.FragmentTabChildBinding
+import com.tubitv.fragmentoperator.demo.R
 import com.tubitv.fragmentoperator.demo.constant.ANY_TAB_INDEX
+import com.tubitv.fragmentoperator.demo.databinding.FragmentTabChildBinding
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.fragment.annotation.TabChildFragment
 import com.tubitv.fragments.FragmentOperator

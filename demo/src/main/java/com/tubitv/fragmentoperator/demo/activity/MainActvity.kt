@@ -1,8 +1,8 @@
 package com.tubitv.fragmentoperator.demo.activity
 
 import android.os.Bundle
-import com.tubitv.fragmentoperator.R
 import com.tubitv.fragmentoperator.activity.FoActivity
+import com.tubitv.fragmentoperator.demo.R
 import com.tubitv.fragmentoperator.demo.fragment.MainFragment
 import com.tubitv.fragments.FragmentOperator
 
