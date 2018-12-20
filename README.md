@@ -2,7 +2,7 @@
 
 A library to make managing Android fragment backstack easier!
 
-### Usage
+### Single Activity Backstack Usage
 
 Currently you need to grab all source code.
 
@@ -29,6 +29,28 @@ When you need to set a `Fragment` class to be single instance in backstack, just
   @SingleInstanceFragment
   public class CategoryFragment {}
 ```
+
+### Tabs Navigation Usage (Fragment child backstack)
+
+FragmentOperator also supports another level of backstack navigation along with Activity backstack. It fully
+supports iOS tabs style navigation, which means it keeps and maintains multiple child Fragment backstacks.
+
+Same here, to use FragmentOperator, you need make sure your `Activity` extend from `FoActivity` and `Fragment`
+extend from 'FoFragment'.
+
+You need build a Fragment to host all tabs and implement `TabsNavigator`.
+
+Then for any fragments you want to display on a specific tab, you just add annotation `TabChildFragment` and put
+tab index. When you show fragment instance with
+```java
+  FragmentOperator.INSTANCE.showFragment
+```
+FragmentOperator will automatically switch to correct tab and display Fragment instance on that tab.
+
+FragmentOperator also supports popping all the way back to root child fragment, just like iOS.
+
+Please refer demo project for how to use tabs navigation.
+
 
 ### MIT License
 
