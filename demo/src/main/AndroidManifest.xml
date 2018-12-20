@@ -1,4 +1,4 @@
-<manifest package="com.tubitv.fragmentoperator"
+<manifest package="com.tubitv.fragmentoperator.demo"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
@@ -10,7 +10,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".demo.activity.MainActvity"
+            android:name=".activity.MainActvity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -18,5 +18,5 @@
             </intent-filter>
         </activity>
     </application>
-    
+
 </manifest>

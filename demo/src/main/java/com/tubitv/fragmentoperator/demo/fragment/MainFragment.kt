@@ -10,18 +10,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TabWidget
 import android.widget.TextView
-import com.tubitv.fragmentoperator.R
-import com.tubitv.fragmentoperator.databinding.FragmentMainBinding
-import com.tubitv.fragmentoperator.databinding.TabItemBinding
+import com.tubitv.fragmentoperator.demo.R
+import com.tubitv.fragmentoperator.demo.databinding.FragmentMainBinding
+import com.tubitv.fragmentoperator.demo.databinding.TabItemBinding
 import com.tubitv.fragmentoperator.demo.fragment.container.FirstTabContainerFragment
 import com.tubitv.fragmentoperator.demo.fragment.container.FourthTabContainerFragment
 import com.tubitv.fragmentoperator.demo.fragment.container.SecondTabContainerFragment
 import com.tubitv.fragmentoperator.demo.fragment.container.ThirdTabContainerFragment
+import com.tubitv.fragmentoperator.demo.model.TabConfig
+import com.tubitv.fragmentoperator.demo.model.TabsViewModel
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.interfaces.TabsNavigator
 import com.tubitv.fragments.FragmentOperator
-import com.tubitv.views.viewmodels.TabConfig
-import com.tubitv.views.viewmodels.TabsViewModel
 
 class MainFragment : FoFragment(), TabsNavigator {
 
