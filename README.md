@@ -42,7 +42,7 @@ FragmentOperator also supports another level of backstack navigation along with 
 supports iOS tabs style navigation, which means it keeps and maintains multiple child Fragment backstacks.
 
 Same here, to use FragmentOperator, you need make sure your `Activity` extend from `FoActivity` and `Fragment`
-extend from 'FoFragment'.
+extend from `FoFragment`.
 
 You need build a Fragment to host all tabs and implement `TabsNavigator`.
 
