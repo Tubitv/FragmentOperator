@@ -2,10 +2,16 @@
 
 A library to make managing Android fragment backstack easier!
 
+## Usage
+
+Add to your project `build.gradle` file:
+```groovy
+dependencies {
+  implementation 'com.tubitv:fragmentoperator:1.1'
+}
+```
+
 ### Single Activity Backstack Usage
-
-Currently you need to grab all source code.
-
 Your `Activity` for `Fragment` operation has to extend from `FoActivity`.
 All your fragments have to extend from `FoFragment`.
 
