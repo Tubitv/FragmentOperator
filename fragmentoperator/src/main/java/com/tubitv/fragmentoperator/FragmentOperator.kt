@@ -5,12 +5,12 @@ import android.os.Build
 import android.support.annotation.IdRes
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
-import com.tubitv.fragmentoperator.`interface`.TabsNavigator
 import com.tubitv.fragmentoperator.activity.FoActivity
 import com.tubitv.fragmentoperator.dialog.FoDialog
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.fragment.annotation.SingleInstanceFragment
 import com.tubitv.fragmentoperator.fragment.annotation.TabChildFragment
+import com.tubitv.fragmentoperator.interfaces.TabsNavigator
 import com.tubitv.fragmentoperator.logging.FoLog
 import java.lang.ref.WeakReference
 
@@ -46,6 +46,10 @@ object FragmentOperator {
 
     fun unregisterTabsNavigator() {
         mTabsNavigator = null
+    }
+
+    fun getTabsNavigator(): TabsNavigator? {
+        return mTabsNavigator
     }
 
     /**

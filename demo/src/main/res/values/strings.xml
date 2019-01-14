@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FragmentOperator Demo</string>
+    <string name="tab_1_name">First Tab</string>
+    <string name="tab_2_name">Second Tab</string>
+    <string name="tab_3_name">Third Tab</string>
+    <string name="tab_4_name">Fourth Tab</string>
+    <string name="load_to_current">Load to current tab</string>
+    <string name="load_to_other">Load to other tab</string>
+
+</resources>
