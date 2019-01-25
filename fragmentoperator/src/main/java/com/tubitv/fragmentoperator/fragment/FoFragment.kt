@@ -46,6 +46,15 @@ open class FoFragment : Fragment() {
         return false
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+            previousFragmentTag = savedInstanceState.getString(PREVIOUS_FRAGMENT_TAG)
+            mCurrentFragmentTag = savedInstanceState.getString(CURRENT_FRAGMENT_TAG)
+            mRootChildFragmentTag = savedInstanceState.getString(ROOT_CHILD_FRAGMENT_TAG)
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
