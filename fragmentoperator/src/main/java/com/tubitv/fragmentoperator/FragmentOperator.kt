@@ -134,6 +134,28 @@ object FragmentOperator {
     }
 
     /**
+     * Show a fragment in a container fragment
+     *
+     * @param containerFragment Container Fragment to be used for displaying fragment
+     * @param fragment Fragment instance to be displayed
+     * @param clearStack Flag to clear back stack or not
+     * @param skipOnPop Flag for fragment to be skipped when pop back stack
+     * @param containerId Container resource ID to display the fragment
+     */
+    fun showFragment(containerFragment: FoFragment,
+                     fragment: FoFragment,
+                     clearStack: Boolean,
+                     skipOnPop: Boolean,
+                     @IdRes containerId: Int) {
+
+        if (!containerFragment.isReadyForFragmentOperation()) {
+            // TODO: cache UI actions and resume later
+            return
+        }
+        showFragment(containerFragment.childFragmentManager, fragment, clearStack, skipOnPop, containerId)
+    }
+
+    /**
      * Show a fragment in a container with control of clearing previous back stack and setting fragment to be skipped on back
      *
      * @param fragmentManager FragmentManager to be used for displaying fragment
@@ -158,6 +180,7 @@ object FragmentOperator {
         // We also use activity lifecycle to check if fragment ready for child fragment.
         if (!activity.isReadyForFragmentOperation()) {
             // TODO: cache UI actions and resume later
+            FoLog.d(TAG, "Activity FragmentManager is not ready to show fragment")
             return
         }
 
@@ -262,7 +285,7 @@ object FragmentOperator {
 
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
-                if (currentChildFragment != null) {
+                if (currentChildFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
                     return popToPreviousFragment(currentChildFragment, currentContainerFragment.childFragmentManager)
                 }
             } else if (tabsNavigator.getCurrentTabIndex() != 0) { // Check if tabs have navigation history TODO handle multiple tab history
@@ -292,7 +315,7 @@ object FragmentOperator {
     fun handleTabPopToRootFragment() {
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
-        if (tabsNavigator != null && currentContainerFragment != null) {
+        if (tabsNavigator != null && currentContainerFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
                 currentContainerFragment.getRootChildFragmentTag()?.let { childFragmentTag ->

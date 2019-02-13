@@ -1,6 +1,7 @@
 package com.tubitv.fragmentoperator.activity
 
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
 import com.tubitv.fragments.FragmentOperator
 
@@ -20,18 +21,23 @@ abstract class FoActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         mIsForeground = true
-        mFragmentManagerPrepared = true
         FragmentOperator.setCurrentActivity(this)
+    }
+
+    override fun onPostResume() {
+        super.onPostResume()
+        mFragmentManagerPrepared = true
     }
 
     override fun onPause() {
         super.onPause()
         mIsForeground = false
+        mFragmentManagerPrepared = false
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+    override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
         mFragmentManagerPrepared = false
+        super.onSaveInstanceState(outState, outPersistentState)
     }
 
     override fun onBackPressed() {

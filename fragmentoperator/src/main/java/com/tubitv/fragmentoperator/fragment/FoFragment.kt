@@ -18,7 +18,9 @@ open class FoFragment : Fragment() {
 
     private var mCurrentFragmentTag: String? = null // Tag for current fragment instance
     private var mRootChildFragmentTag: String? = null // Tag for root child fragment instance
-    
+
+    private var mChildFragmentManagerPrepared: Boolean = false
+
     /**
      * Provide a method to show fragment directly without specific container config
      *
@@ -53,9 +55,12 @@ open class FoFragment : Fragment() {
             mCurrentFragmentTag = savedInstanceState.getString(CURRENT_FRAGMENT_TAG)
             mRootChildFragmentTag = savedInstanceState.getString(ROOT_CHILD_FRAGMENT_TAG)
         }
+        mChildFragmentManagerPrepared = true
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        mChildFragmentManagerPrepared = false
+
         super.onSaveInstanceState(outState)
 
         // Save previous fragment tag and current fragment tag, so we don't lose them during fragment recreation
@@ -71,6 +76,12 @@ open class FoFragment : Fragment() {
             mCurrentFragmentTag = savedInstanceState.getString(CURRENT_FRAGMENT_TAG)
             mRootChildFragmentTag = savedInstanceState.getString(ROOT_CHILD_FRAGMENT_TAG)
         }
+        mChildFragmentManagerPrepared = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mChildFragmentManagerPrepared = true
     }
 
     /**
@@ -123,12 +134,14 @@ open class FoFragment : Fragment() {
                           clearStack: Boolean,
                           skipOnPop: Boolean,
                           @IdRes containerId: Int) {
-        FragmentOperator.showFragment(childFragmentManager, fragment, clearStack, skipOnPop, containerId)
+        FragmentOperator.showFragment(this, fragment, clearStack, skipOnPop, containerId)
     }
 
     fun getCurrentChildFragment(@IdRes containerId: Int): FoFragment? {
         return FragmentOperator.getCurrentFragment(childFragmentManager, containerId)
     }
 
-
+    fun isReadyForFragmentOperation(): Boolean {
+        return mChildFragmentManagerPrepared
+    }
 }
