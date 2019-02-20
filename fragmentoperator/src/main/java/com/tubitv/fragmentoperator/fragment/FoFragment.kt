@@ -84,6 +84,11 @@ open class FoFragment : Fragment() {
         mChildFragmentManagerPrepared = true
     }
 
+    override fun onPause() {
+        super.onPause()
+        mChildFragmentManagerPrepared = false
+    }
+
     /**
      * Return the unique tag per fragment instance
      * Since fragment can be re-created when activity configuration changed (i.e. screen rotation) and hashCode will
