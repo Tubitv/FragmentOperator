@@ -273,6 +273,11 @@ object FragmentOperator {
                     return false
                 }
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && currentFragment.isStateSaved) {
+            FoLog.d(TAG, "The current Fragment Manager has saved its states already")
+            return false
+        }
+
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null) {
