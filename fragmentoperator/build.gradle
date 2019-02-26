@@ -12,7 +12,7 @@ buildscript {
 }
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 3
         versionName "1.1"
 
@@ -39,7 +39,7 @@ android {
 }
 
 dependencies {
-    def supportLibraryVersion = '27.1.1'
+    def supportLibraryVersion = '28.0.0'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
