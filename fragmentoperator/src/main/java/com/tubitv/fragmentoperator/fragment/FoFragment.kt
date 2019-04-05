@@ -147,6 +147,6 @@ open class FoFragment : Fragment() {
     }
 
     fun isReadyForFragmentOperation(): Boolean {
-        return mChildFragmentManagerPrepared
+        return isAdded && mChildFragmentManagerPrepared
     }
 }
