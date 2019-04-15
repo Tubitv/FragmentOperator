@@ -231,7 +231,7 @@ object FragmentOperator {
         fragment.addHostFragmentManagerTag(fragmentManagerHolder.tag)
 
         // Save models so we can recover when fragments get recreated
-        FoModels.add(fragment, fragment.getAllModels())
+        FoModels.add(fragment, fragment.getAllArguments())
 
         fragmentTransaction.commit()
     }

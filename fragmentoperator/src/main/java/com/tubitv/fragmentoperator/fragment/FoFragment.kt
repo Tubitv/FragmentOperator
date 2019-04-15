@@ -27,7 +27,7 @@ open class FoFragment : Fragment() {
 
     private var mFragmentManagerHolder: FragmentManagerHolder? = null
 
-    private val mModels: HashMap<String, Any> = hashMapOf()
+    private val mArguments: HashMap<String, Any> = hashMapOf()
 
     /**
      * Provide a method to show fragment directly without specific container config
@@ -151,7 +151,7 @@ open class FoFragment : Fragment() {
         fragment.addHostFragmentManagerTag(getFragmentTag())
 
         // Save models so we can recover when fragments get recreated
-        FoModels.add(fragment, fragment.getAllModels())
+        FoModels.add(fragment, fragment.getAllArguments())
 
         fragmentTransaction.commit()
         mRootChildFragmentTag = fragment.getFragmentTag()
@@ -207,12 +207,23 @@ open class FoFragment : Fragment() {
      * @param key   Key to reference model
      * @param data  Model to be set
      */
-    fun addModel(key: String, data: Any) {
-        mModels[key] = data
+    fun addArgument(key: String, data: Any) {
+        mArguments[key] = data
     }
 
-    fun getAllModels(): HashMap<String, Any> {
-        return mModels
+    fun getAllArguments(): HashMap<String, Any> {
+        return mArguments
+    }
+
+    /**
+     * Add model which is persistent during fragment recreation
+     * This will not do anything if fragment instance hasn't been loaded
+     *
+     * @param key   Key to reference model
+     * @param model  Model to be add
+     */
+    fun addModelIfFragmentLoaded(key: String, model: Any) {
+        FoModels.add(this, key, model)
     }
 
     /**
