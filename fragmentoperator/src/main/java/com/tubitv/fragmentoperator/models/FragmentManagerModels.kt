@@ -17,6 +17,26 @@ class FragmentManagerModels {
     private val mModels: HashMap<String, HashMap<String, Any>> = hashMapOf()
 
     /**
+     * Add model for the fragment instance
+     *
+     * @param fragment  Fragment instance
+     * @param key       Key to reference model
+     * @param model     Model to be saved for fragment
+     */
+    fun add(fragment: FoFragment, key: String, model: Any) {
+        val tag = fragment.getFragmentTag()
+
+        val fragmentModelMap = mModels[tag]
+        if (fragmentModelMap != null) {
+            fragmentModelMap[key] = model
+        } else {
+            val newMap: HashMap<String, Any> = hashMapOf()
+            newMap[key] = model
+            mModels[tag] = newMap
+        }
+    }
+
+    /**
      * Add all models of the fragment instance
      *
      * @param fragment  Fragment instance

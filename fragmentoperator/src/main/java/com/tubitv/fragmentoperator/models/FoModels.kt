@@ -24,6 +24,28 @@ object FoModels {
     /**
      * Add all models for a specific fragment instance, which is saved separately for each host FragmentManager
      *
+     * @param fragment  Fragment instance
+     * @param key       Key to reference model
+     * @param model     Model to be saved for fragment
+     */
+    fun add(fragment: FoFragment, key: String, model: Any) {
+        val tagForFragmentManager = fragment.getHostFragmentManagerTag()
+
+        if (tagForFragmentManager != null) {
+
+            if (mFragmentManagerModels.containsKey(tagForFragmentManager)) {
+                mFragmentManagerModels[tagForFragmentManager]?.add(fragment, key, model)
+            } else {
+                val fragmentManagerModels = FragmentManagerModels()
+                fragmentManagerModels.add(fragment, key, model)
+                mFragmentManagerModels[tagForFragmentManager] = fragmentManagerModels
+            }
+        }
+    }
+
+    /**
+     * Add all models for a specific fragment instance, which is saved separately for each host FragmentManager
+     *
      * @param fragment                  Fragment instance
      * @param modelMap                  Map of all models for the fragment instance
      */
