@@ -3,6 +3,7 @@ package com.tubitv.fragmentoperator.activity
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
+import com.tubitv.fragmentoperator.fragment.FragmentManagerHolder
 import com.tubitv.fragments.FragmentOperator
 
 abstract class FoActivity : AppCompatActivity() {
@@ -10,6 +11,7 @@ abstract class FoActivity : AppCompatActivity() {
 
     private var mIsForeground = false
     private var mFragmentManagerPrepared = false
+    private var mFragmentManagerHolder: FragmentManagerHolder? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +45,19 @@ abstract class FoActivity : AppCompatActivity() {
     override fun onBackPressed() {
         if (!FragmentOperator.onBackPressed()) {
             super.onBackPressed()
+        }
+    }
+
+    fun getFragmentManagerHolder(): FragmentManagerHolder {
+        val fragmentManagerHolder = mFragmentManagerHolder
+
+        return if (fragmentManagerHolder == null) {
+            val newInstance =
+                    FragmentManagerHolder(supportFragmentManager, FragmentManagerHolder.MAIN_ACTIVITY_FRAGMENT_MANAGER)
+            mFragmentManagerHolder = newInstance
+            newInstance
+        } else {
+            fragmentManagerHolder
         }
     }
 
