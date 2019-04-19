@@ -77,6 +77,12 @@ class FragmentManagerModels {
      */
     fun cleanUp(fragmentManager: FragmentManager) {
         FoLog.d(TAG, "Before cleanUp models map size: " + mModels.size)
+
+        // If models is empty, no need to loop through fragments
+        if (mModels.isEmpty()) {
+            return
+        }
+
         val updateMap: HashMap<String, HashMap<String, Any>> = hashMapOf()
 
         // Check visible fragments
