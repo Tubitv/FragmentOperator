@@ -3,10 +3,12 @@ package com.tubitv.fragmentoperator.fragment
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import com.tubitv.fragmentoperator.interfaces.FragmentHost
 import com.tubitv.fragmentoperator.models.FoModels
 import com.tubitv.fragments.FragmentOperator
 
-open class FoFragment : Fragment() {
+open class FoFragment : Fragment(), FragmentHost {
     private val TAG = FoFragment::class.simpleName
 
     private val PREVIOUS_FRAGMENT_TAG = "previous_fragment_tag"
@@ -24,8 +26,6 @@ open class FoFragment : Fragment() {
     private var mHostFragmentManagerTag: String? = null // Tag for which fragment manager is this instance loaded to
 
     private var mChildFragmentManagerPrepared: Boolean = false
-
-    private var mFragmentManagerHolder: FragmentManagerHolder? = null
 
     private val mArguments: HashMap<String, Any> = hashMapOf()
 
@@ -97,6 +97,18 @@ open class FoFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         mChildFragmentManagerPrepared = false
+    }
+
+    override fun isReadyForFragmentOperation(): Boolean {
+        return isAdded && mChildFragmentManagerPrepared
+    }
+
+    override fun getFragmentManagerTag(): String {
+        return getFragmentTag()
+    }
+
+    override fun getHostFragmentManager(): FragmentManager {
+        return childFragmentManager
     }
 
     /**
@@ -183,22 +195,6 @@ open class FoFragment : Fragment() {
 
     fun getCurrentChildFragment(@IdRes containerId: Int): FoFragment? {
         return FragmentOperator.getCurrentFragment(childFragmentManager, containerId)
-    }
-
-    fun isReadyForFragmentOperation(): Boolean {
-        return isAdded && mChildFragmentManagerPrepared
-    }
-
-    fun getFragmentManagerHolder(): FragmentManagerHolder {
-        val fragmentManagerHolder = mFragmentManagerHolder
-
-        return if (fragmentManagerHolder == null) {
-            val newInstance = FragmentManagerHolder(childFragmentManager, getFragmentTag())
-            mFragmentManagerHolder = newInstance
-            newInstance
-        } else {
-            fragmentManagerHolder
-        }
     }
 
     /**

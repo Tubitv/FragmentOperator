@@ -1,7 +1,7 @@
 package com.tubitv.fragmentoperator.models
 
 import com.tubitv.fragmentoperator.fragment.FoFragment
-import com.tubitv.fragmentoperator.fragment.FragmentManagerHolder
+import com.tubitv.fragmentoperator.interfaces.FragmentHost
 import com.tubitv.fragmentoperator.logging.FoLog
 
 /**
@@ -50,6 +50,10 @@ object FoModels {
      * @param modelMap                  Map of all models for the fragment instance
      */
     fun add(fragment: FoFragment, modelMap: HashMap<String, Any>) {
+        if (modelMap.isEmpty()) {
+            return
+        }
+
         val tagForFragmentManager = fragment.getHostFragmentManagerTag()
 
         if (tagForFragmentManager != null) {
@@ -81,16 +85,12 @@ object FoModels {
     }
 
     /**
-     * Clean up models for the host FragmentManager
+     * Clean up models for Fragment host
      *
-     * @param fragmentManagerHolder  Host FragmentManager wrapper
+     * @param fragmentHost  Fragment host
      */
-    fun cleanUpModels(fragmentManagerHolder: FragmentManagerHolder) {
-        FoLog.d(TAG, "cleanUpModels for FragmentManager with tag: " + fragmentManagerHolder.tag)
-
-        val fragmentManager = fragmentManagerHolder.fragmentManager
-        if (fragmentManager != null) {
-            mFragmentManagerModels[fragmentManagerHolder.tag]?.cleanUp(fragmentManager)
-        }
+    fun cleanUpModels(fragmentHost: FragmentHost) {
+        FoLog.d(TAG, "cleanUpModels for FragmentManager with tag: " + fragmentHost.getFragmentManagerTag())
+        mFragmentManagerModels[fragmentHost.getFragmentManagerTag()]?.cleanUp(fragmentHost.getHostFragmentManager())
     }
 }

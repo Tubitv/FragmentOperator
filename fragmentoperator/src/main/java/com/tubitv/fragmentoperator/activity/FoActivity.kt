@@ -2,16 +2,19 @@ package com.tubitv.fragmentoperator.activity
 
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.support.v4.app.FragmentManager
 import android.support.v7.app.AppCompatActivity
-import com.tubitv.fragmentoperator.fragment.FragmentManagerHolder
+import com.tubitv.fragmentoperator.interfaces.FragmentHost
 import com.tubitv.fragments.FragmentOperator
 
-abstract class FoActivity : AppCompatActivity() {
-    private val TAG = FoActivity::class.simpleName
+abstract class FoActivity : AppCompatActivity(), FragmentHost {
+    companion object {
+        private val TAG = FoActivity::class.simpleName
+        private const val FRAGMENT_MANAGER_DEFAULT_TAG = "activity_fragment_manager"
+    }
 
     private var mIsForeground = false
     private var mFragmentManagerPrepared = false
-    private var mFragmentManagerHolder: FragmentManagerHolder? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,25 +51,20 @@ abstract class FoActivity : AppCompatActivity() {
         }
     }
 
-    fun getFragmentManagerHolder(): FragmentManagerHolder {
-        val fragmentManagerHolder = mFragmentManagerHolder
+    override fun isReadyForFragmentOperation(): Boolean {
+        return mIsForeground && mFragmentManagerPrepared
+    }
 
-        return if (fragmentManagerHolder == null) {
-            val newInstance =
-                    FragmentManagerHolder(supportFragmentManager, FragmentManagerHolder.MAIN_ACTIVITY_FRAGMENT_MANAGER)
-            mFragmentManagerHolder = newInstance
-            newInstance
-        } else {
-            fragmentManagerHolder
-        }
+    override fun getFragmentManagerTag(): String {
+        return this::class.simpleName ?: FRAGMENT_MANAGER_DEFAULT_TAG
+    }
+
+    override fun getHostFragmentManager(): FragmentManager {
+        return supportFragmentManager
     }
 
     fun isForeground(): Boolean {
         return mIsForeground
-    }
-
-    fun isReadyForFragmentOperation(): Boolean {
-        return mIsForeground && mFragmentManagerPrepared
     }
 
     abstract fun getFragmentContainerResId(): Int
