@@ -69,6 +69,17 @@ class FragmentManagerModels {
     }
 
     /**
+     * Use key to look up model for fragment instance
+     *
+     * @param fragmentTag   Tag for fragment instance
+     * @param key           String key to reference model
+     */
+    fun <T : Any> get(fragmentTag: String, key: String): T? {
+        return mModels[fragmentTag]?.get(key) as? T
+    }
+
+
+    /**
      * Clean up models for the host FragmentManager
      *
      * This will loop through all fragments in backstack and discard any models that are not needed any more

@@ -85,6 +85,17 @@ object FoModels {
     }
 
     /**
+     * Use key to look up model for fragment instance
+     *
+     * @param hostFragmentManagerTag    Host FragmentManager tag
+     * @param fragmentTag               Tag for fragment instance
+     * @param key                       String key to reference model
+     */
+    fun <T : Any> get(hostFragmentManagerTag: String, fragmentTag: String, key: String): T? {
+        return mFragmentManagerModels[hostFragmentManagerTag]?.get(fragmentTag, key)
+    }
+
+    /**
      * Clean up models for Fragment host
      *
      * @param fragmentHost  Fragment host
