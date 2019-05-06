@@ -26,7 +26,7 @@ object FoModels {
      *
      * @param fragment  Fragment instance
      * @param key       Key to reference model
-     * @param model     Model to be saved for fragment
+     * @param model     Model to be saved for fragments
      */
     fun add(fragment: FoFragment, key: String, model: Any) {
         val tagForFragmentManager = fragment.getHostFragmentManagerTag()
@@ -103,5 +103,12 @@ object FoModels {
     fun cleanUpModels(fragmentHost: FragmentHost) {
         FoLog.d(TAG, "cleanUpModels for FragmentManager with tag: " + fragmentHost.getFragmentManagerTag())
         mFragmentManagerModels[fragmentHost.getFragmentManagerTag()]?.cleanUp(fragmentHost.getHostFragmentManager())
+    }
+
+    /**
+     * Clear all models for fragments
+     */
+    fun clear() {
+        mFragmentManagerModels.clear()
     }
 }
