@@ -91,8 +91,11 @@ object FoModels {
      * @param fragmentTag               Tag for fragment instance
      * @param key                       String key to reference model
      */
-    fun <T : Any> get(hostFragmentManagerTag: String, fragmentTag: String, key: String): T? {
-        return mFragmentManagerModels[hostFragmentManagerTag]?.get(fragmentTag, key)
+    fun <T : Any> get(hostFragmentManagerTag: String?, fragmentTag: String?, key: String?): T? {
+        if (hostFragmentManagerTag != null && fragmentTag != null && key != null) {
+            return mFragmentManagerModels[hostFragmentManagerTag]?.get(fragmentTag, key)
+        }
+        return null
     }
 
     /**
