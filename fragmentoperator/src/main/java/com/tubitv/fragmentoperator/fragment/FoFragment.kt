@@ -9,13 +9,15 @@ import com.tubitv.fragmentoperator.models.FoModels
 import com.tubitv.fragments.FragmentOperator
 
 open class FoFragment : Fragment(), FragmentHost {
-    private val TAG = FoFragment::class.simpleName
+    companion object {
+        private val TAG = FoFragment::class.simpleName
 
-    private val PREVIOUS_FRAGMENT_TAG = "previous_fragment_tag"
-    private val CURRENT_FRAGMENT_TAG = "current_fragment_tag"
-    private val ROOT_CHILD_FRAGMENT_TAG = "root_child_fragment_tag"
-    private val HOST_FRAGMENT_MANAGER_TAG = "host_fragment_manager_tag"
-    private val FRAGMENT_TAG_SEPERATOR = ":"
+        private const val PREVIOUS_FRAGMENT_TAG = "previous_fragment_tag"
+        private const val CURRENT_FRAGMENT_TAG = "current_fragment_tag"
+        private const val ROOT_CHILD_FRAGMENT_TAG = "root_child_fragment_tag"
+        private const val HOST_FRAGMENT_MANAGER_TAG = "host_fragment_manager_tag"
+        private const val FRAGMENT_TAG_SEPERATOR = ":"
+    }
 
     var skipOnPop = false // Flag to mark if current instance should be skipped when pop back stack
     var previousFragmentTag: String? = null // Tag for fragment that will go to when pop back from current instance
