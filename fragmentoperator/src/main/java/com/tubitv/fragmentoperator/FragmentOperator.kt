@@ -325,12 +325,21 @@ object FragmentOperator {
     }
 
     /**
+     * Container child fragment handle click or
+     * container fragment pop to root fragment
      * @return True if successfully navigate back to root fragment, false if already on root fragment
      */
-    fun handleTabPopToRootFragment(): Boolean {
+    fun handleTabClick() :Boolean{
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
+            val childFragmentHandleTabClick =
+                    currentContainerFragment.getCurrentChildFragment()?.onTabClicked() ?: false
+            if (childFragmentHandleTabClick) {
+                //child fragment has handled tab click
+                return false
+            }
+
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
                 currentContainerFragment.getRootChildFragmentTag()?.let { childFragmentTag ->

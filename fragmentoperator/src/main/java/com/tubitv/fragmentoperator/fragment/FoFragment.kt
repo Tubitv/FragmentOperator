@@ -58,6 +58,15 @@ open class FoFragment : Fragment(), FragmentHost {
         return false
     }
 
+    /**
+     * Provide a method to let fragment handle bottom tab widget pressed
+     *
+     * @return True if fragment has handled bottom tab widget pressed
+     */
+    open fun onTabClicked(): Boolean {
+        return false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {
@@ -215,7 +224,7 @@ open class FoFragment : Fragment(), FragmentHost {
 
     /**
      * Add model which is persistent during fragment recreation
-     * This will not do anything if fragment instance hasn't been loaded
+         * This will not do anything if fragment instance hasn't been loaded
      *
      * @param key   Key to reference model
      * @param model  Model to be add
@@ -232,4 +241,5 @@ open class FoFragment : Fragment(), FragmentHost {
     fun <T : Any> getModel(key: String): T? {
         return FoModels.get(this, key)
     }
+
 }
