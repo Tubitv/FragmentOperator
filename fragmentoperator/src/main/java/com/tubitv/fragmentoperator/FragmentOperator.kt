@@ -324,17 +324,21 @@ object FragmentOperator {
         return popToPreviousFragment(currentFragment, activity)
     }
 
-    fun handleTabPopToRootFragment() {
+    /**
+     * @return True if successfully navigate back to root fragment, false if already on root fragment
+     */
+    fun handleTabPopToRootFragment(): Boolean {
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
                 currentContainerFragment.getRootChildFragmentTag()?.let { childFragmentTag ->
-                    popToFragment(currentContainerFragment, childFragmentTag)
+                    return popToFragment(currentContainerFragment, childFragmentTag)
                 }
             }
         }
+        return false
     }
 
     private fun popToPreviousFragment(fragment: FoFragment, fragmentHost: FragmentHost): Boolean {
