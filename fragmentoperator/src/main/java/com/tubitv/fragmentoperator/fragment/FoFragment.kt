@@ -224,7 +224,7 @@ open class FoFragment : Fragment(), FragmentHost {
 
     /**
      * Add model which is persistent during fragment recreation
-         * This will not do anything if fragment instance hasn't been loaded
+     * This will not do anything if fragment instance hasn't been loaded
      *
      * @param key   Key to reference model
      * @param model  Model to be add
@@ -241,5 +241,4 @@ open class FoFragment : Fragment(), FragmentHost {
     fun <T : Any> getModel(key: String): T? {
         return FoModels.get(this, key)
     }
-
 }
