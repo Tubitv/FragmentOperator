@@ -59,11 +59,11 @@ open class FoFragment : Fragment(), FragmentHost {
     }
 
     /**
-     * Provide a method to let fragment handle bottom tab widget pressed
+     * Provide a method to let fragment handle bottom container pressed
      *
-     * @return True if fragment has handled bottom tab widget pressed
+     * @return True if fragment has handled bottom container pressed
      */
-    open fun onTabClicked(): Boolean {
+    open fun onContainerSelect(): Boolean {
         return false
     }
 

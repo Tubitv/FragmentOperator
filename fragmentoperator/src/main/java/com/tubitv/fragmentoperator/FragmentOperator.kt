@@ -334,7 +334,7 @@ object FragmentOperator {
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
             val childFragmentHandleTabClick =
-                    currentContainerFragment.getCurrentChildFragment()?.onTabClicked() ?: false
+                    currentContainerFragment.getCurrentChildFragment()?.onContainerSelect() ?: false
             if (childFragmentHandleTabClick) {
                 //child fragment has handled tab click
                 return false
