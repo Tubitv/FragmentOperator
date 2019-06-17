@@ -105,9 +105,8 @@ class FragmentManagerModels {
 
         // Check fragments in back stack
         for (i in 0 until fragmentManager.backStackEntryCount) {
-            val fragment = fragmentManager
-                    .findFragmentByTag(fragmentManager.getBackStackEntryAt(i).name)
-            copyDataForFragment(updateMap, fragment)
+            val tag = fragmentManager.getBackStackEntryAt(i).name
+            tag?.let { copyDataForFragmentByTag(updateMap, tag) }
         }
 
         mModels.clear() // clear all reference
@@ -122,6 +121,12 @@ class FragmentManagerModels {
                     updateMap[tag] = data
                 }
             }
+        }
+    }
+
+    private fun copyDataForFragmentByTag(updateMap: HashMap<String, HashMap<String, Any>>, tag: String) {
+        mModels[tag]?.let { data ->
+            updateMap[tag] = data
         }
     }
 }
