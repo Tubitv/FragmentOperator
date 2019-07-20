@@ -3,22 +3,34 @@ package com.tubitv.fragmentoperator.fragment
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import com.tubitv.fragmentoperator.interfaces.FragmentHost
+import com.tubitv.fragmentoperator.models.FoModels
 import com.tubitv.fragments.FragmentOperator
 
-open class FoFragment : Fragment() {
-    private val TAG = FoFragment::class.simpleName
+open class FoFragment : Fragment(), FragmentHost {
+    companion object {
+        private val TAG = FoFragment::class.simpleName
 
-    private val PREVIOUS_FRAGMENT_TAG = "previous_fragment_tag"
-    private val CURRENT_FRAGMENT_TAG = "current_fragment_tag"
-    private val ROOT_CHILD_FRAGMENT_TAG = "root_child_fragment_tag"
-    private val FRAGMENT_TAG_SEPERATOR = ":"
+        private const val PREVIOUS_FRAGMENT_TAG = "previous_fragment_tag"
+        private const val CURRENT_FRAGMENT_TAG = "current_fragment_tag"
+        private const val ROOT_CHILD_FRAGMENT_TAG = "root_child_fragment_tag"
+        private const val HOST_FRAGMENT_MANAGER_TAG = "host_fragment_manager_tag"
+        private const val FRAGMENT_TAG_SEPERATOR = ":"
+    }
 
     var skipOnPop = false // Flag to mark if current instance should be skipped when pop back stack
     var previousFragmentTag: String? = null // Tag for fragment that will go to when pop back from current instance
 
     private var mCurrentFragmentTag: String? = null // Tag for current fragment instance
     private var mRootChildFragmentTag: String? = null // Tag for root child fragment instance
-    
+
+    private var mHostFragmentManagerTag: String? = null // Tag for which fragment manager is this instance loaded to
+
+    private var mChildFragmentManagerPrepared: Boolean = false
+
+    private val mArguments: HashMap<String, Any> = hashMapOf()
+
     /**
      * Provide a method to show fragment directly without specific container config
      *
@@ -46,13 +58,36 @@ open class FoFragment : Fragment() {
         return false
     }
 
+    /**
+     * Provide a method to let fragment handle bottom container pressed
+     *
+     * @return True if fragment has handled bottom container pressed
+     */
+    open fun onContainerSelect(): Boolean {
+        return false
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+            previousFragmentTag = savedInstanceState.getString(PREVIOUS_FRAGMENT_TAG)
+            mCurrentFragmentTag = savedInstanceState.getString(CURRENT_FRAGMENT_TAG)
+            mRootChildFragmentTag = savedInstanceState.getString(ROOT_CHILD_FRAGMENT_TAG)
+            mHostFragmentManagerTag = savedInstanceState.getString(HOST_FRAGMENT_MANAGER_TAG)
+        }
+        mChildFragmentManagerPrepared = true
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
+        mChildFragmentManagerPrepared = false
+
         super.onSaveInstanceState(outState)
 
         // Save previous fragment tag and current fragment tag, so we don't lose them during fragment recreation
         outState.putString(PREVIOUS_FRAGMENT_TAG, previousFragmentTag)
         outState.putString(CURRENT_FRAGMENT_TAG, getFragmentTag())
         outState.putString(ROOT_CHILD_FRAGMENT_TAG, mRootChildFragmentTag)
+        outState.putString(HOST_FRAGMENT_MANAGER_TAG, mHostFragmentManagerTag)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -62,6 +97,29 @@ open class FoFragment : Fragment() {
             mCurrentFragmentTag = savedInstanceState.getString(CURRENT_FRAGMENT_TAG)
             mRootChildFragmentTag = savedInstanceState.getString(ROOT_CHILD_FRAGMENT_TAG)
         }
+        mChildFragmentManagerPrepared = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mChildFragmentManagerPrepared = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mChildFragmentManagerPrepared = false
+    }
+
+    override fun isReadyForFragmentOperation(): Boolean {
+        return isAdded && mChildFragmentManagerPrepared
+    }
+
+    override fun getFragmentManagerTag(): String {
+        return getFragmentTag()
+    }
+
+    override fun getHostFragmentManager(): FragmentManager {
+        return childFragmentManager
     }
 
     /**
@@ -71,13 +129,26 @@ open class FoFragment : Fragment() {
      *
      * @return Unique tag string per instance
      */
-    fun getFragmentTag(): String? {
-        if (mCurrentFragmentTag == null) {
-            mCurrentFragmentTag = this.javaClass.simpleName + FRAGMENT_TAG_SEPERATOR + this.hashCode()
+    fun getFragmentTag(): String {
+        val tag = mCurrentFragmentTag
+
+        return if (tag == null) {
+            val newTag = this.javaClass.simpleName + FRAGMENT_TAG_SEPERATOR + this.hashCode()
+            mCurrentFragmentTag = newTag
+            newTag
+        } else {
+            tag
         }
-        return mCurrentFragmentTag
     }
 
+    /**
+     * Return the tag for host FragmentManager
+     *
+     * @return Unique tag string for host FragmentManager
+     */
+    fun getHostFragmentManagerTag(): String? {
+        return mHostFragmentManagerTag
+    }
 
     /**
      * Get the tag of root child fragment instance if any
@@ -98,8 +169,24 @@ open class FoFragment : Fragment() {
         val fragmentTransaction = childFragmentManager.beginTransaction()
         fragmentTransaction.add(containerId, fragment, fragment.getFragmentTag())
         fragmentTransaction.addToBackStack(fragment.getFragmentTag())
+
+        // Save tag to track which FragmentManager the fragment belongs to
+        fragment.addHostFragmentManagerTag(getFragmentTag())
+
+        // Save models so we can recover when fragments get recreated
+        FoModels.add(fragment, fragment.getAllArguments())
+
         fragmentTransaction.commit()
         mRootChildFragmentTag = fragment.getFragmentTag()
+    }
+
+    /**
+     * Add host FragmentManager tag
+     *
+     * @param tag   Tag for host FragmentManager
+     */
+    fun addHostFragmentManagerTag(tag: String) {
+        mHostFragmentManagerTag = tag
     }
 
     /**
@@ -114,12 +201,44 @@ open class FoFragment : Fragment() {
                           clearStack: Boolean,
                           skipOnPop: Boolean,
                           @IdRes containerId: Int) {
-        FragmentOperator.showFragment(childFragmentManager, fragment, clearStack, skipOnPop, containerId)
+        FragmentOperator.showFragment(this, fragment, clearStack, skipOnPop, containerId)
     }
 
     fun getCurrentChildFragment(@IdRes containerId: Int): FoFragment? {
         return FragmentOperator.getCurrentFragment(childFragmentManager, containerId)
     }
 
+    /**
+     * Set in memory model which is persistent through fragment recreation
+     *
+     * @param key   Key to reference model
+     * @param data  Model to be set
+     */
+    fun addArgument(key: String, data: Any) {
+        mArguments[key] = data
+    }
 
+    fun getAllArguments(): HashMap<String, Any> {
+        return mArguments
+    }
+
+    /**
+     * Add model which is persistent during fragment recreation
+     * This will not do anything if fragment instance hasn't been loaded
+     *
+     * @param key   Key to reference model
+     * @param model  Model to be add
+     */
+    fun addModelIfFragmentLoaded(key: String, model: Any) {
+        FoModels.add(this, key, model)
+    }
+
+    /**
+     * Get in memory model which is persistent through fragment recreation
+     *
+     * @param key   Key to reference model
+     */
+    fun <T : Any> getModel(key: String): T? {
+        return FoModels.get(this, key)
+    }
 }
