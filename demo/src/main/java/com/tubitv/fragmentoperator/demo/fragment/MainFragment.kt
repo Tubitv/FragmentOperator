@@ -142,9 +142,9 @@ class MainFragment : FoFragment(), TabsNavigator {
 
     private fun setupTabListeners() {
         for (index in 0 until mBinding.tabhost.tabWidget.childCount) {
-            mBinding.tabhost.tabWidget.getChildAt(index).setOnClickListener { view ->
+            mBinding.tabhost.tabWidget.getChildAt(index).setOnClickListener { _ ->
                 if (index == mBinding.tabhost.currentTab) {
-                    FragmentOperator.handleTabPopToRootFragment()
+                    FragmentOperator.handleTabClick()
                 } else {
                     mBinding.tabhost.currentTab = index
                 }
