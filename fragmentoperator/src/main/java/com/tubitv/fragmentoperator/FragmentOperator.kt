@@ -10,8 +10,10 @@ import com.tubitv.fragmentoperator.dialog.FoDialog
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.fragment.annotation.SingleInstanceFragment
 import com.tubitv.fragmentoperator.fragment.annotation.TabChildFragment
+import com.tubitv.fragmentoperator.interfaces.FragmentHost
 import com.tubitv.fragmentoperator.interfaces.TabsNavigator
 import com.tubitv.fragmentoperator.logging.FoLog
+import com.tubitv.fragmentoperator.models.FoModels
 import java.lang.ref.WeakReference
 
 /**
@@ -129,27 +131,48 @@ object FragmentOperator {
             FoLog.d(TAG, "showFragment fail due to empty container id")
             return
         }
-
-        showFragment(getCurrentActivity()?.supportFragmentManager, fragment, clearStack, skipOnPop, containerId)
+        val activity = getCurrentActivity() ?: return
+        showFragmentWithFragmentHost(activity, fragment, clearStack, skipOnPop, containerId)
     }
 
     /**
-     * Show a fragment in a container with control of clearing previous back stack and setting fragment to be skipped on back
+     * Show a fragment in a container fragment
      *
-     * @param fragmentManager FragmentManager to be used for displaying fragment
+     * @param containerFragment Container Fragment to be used for displaying fragment
      * @param fragment Fragment instance to be displayed
      * @param clearStack Flag to clear back stack or not
      * @param skipOnPop Flag for fragment to be skipped when pop back stack
      * @param containerId Container resource ID to display the fragment
      */
-    fun showFragment(fragmentManager: FragmentManager?,
+    fun showFragment(containerFragment: FoFragment,
                      fragment: FoFragment,
                      clearStack: Boolean,
                      skipOnPop: Boolean,
                      @IdRes containerId: Int) {
 
-        // If FragmentManager is null, just return
-        val fragmentManager = fragmentManager ?: return
+        if (!containerFragment.isReadyForFragmentOperation()) {
+            // TODO: cache UI actions and resume later
+            return
+        }
+        showFragmentWithFragmentHost(containerFragment, fragment, clearStack, skipOnPop, containerId)
+    }
+
+    /**
+     * Show a fragment in a container with control of clearing previous back stack and setting fragment to be skipped on back
+     *
+     * @param fragmentHost FragmentHost to be used for displaying fragment
+     * @param fragment Fragment instance to be displayed
+     * @param clearStack Flag to clear back stack or not
+     * @param skipOnPop Flag for fragment to be skipped when pop back stack
+     * @param containerId Container resource ID to display the fragment
+     */
+    fun showFragmentWithFragmentHost(fragmentHost: FragmentHost,
+                                     fragment: FoFragment,
+                                     clearStack: Boolean,
+                                     skipOnPop: Boolean,
+                                     @IdRes containerId: Int) {
+
+        val fragmentManager = fragmentHost.getHostFragmentManager()
 
         // If activity is null, just return
         val activity = getCurrentActivity() ?: return
@@ -158,11 +181,12 @@ object FragmentOperator {
         // We also use activity lifecycle to check if fragment ready for child fragment.
         if (!activity.isReadyForFragmentOperation()) {
             // TODO: cache UI actions and resume later
+            FoLog.d(TAG, "Activity FragmentManager is not ready to show fragment")
             return
         }
 
         if (clearStack) {
-            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            fragmentHost.handlePopBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
 
         val fragmentTransaction = fragmentManager.beginTransaction()
@@ -171,7 +195,7 @@ object FragmentOperator {
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 
         // Handle single instance
-        val previousFragmentTagForOverride = handleSingleInstanceFragment(fragmentManager, fragment)
+        val previousFragmentTagForOverride = handleSingleInstanceFragment(fragmentHost, fragment)
 
         val fragmentTag = fragment.getFragmentTag()
 
@@ -201,6 +225,12 @@ object FragmentOperator {
             // So we just grab the new previous fragment tag
             fragment.previousFragmentTag = previousFragmentTagForOverride
         }
+
+        // Save tag to track which FragmentManager the fragment belongs to
+        fragment.addHostFragmentManagerTag(fragmentHost.getFragmentManagerTag())
+
+        // Save models so we can recover when fragments get recreated
+        FoModels.add(fragment, fragment.getAllArguments())
 
         fragmentTransaction.commit()
     }
@@ -250,6 +280,11 @@ object FragmentOperator {
                     return false
                 }
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && currentFragment.isStateSaved) {
+            FoLog.d(TAG, "The current Fragment Manager has saved its states already")
+            return false
+        }
+
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null) {
@@ -262,8 +297,8 @@ object FragmentOperator {
 
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
-                if (currentChildFragment != null) {
-                    return popToPreviousFragment(currentChildFragment, currentContainerFragment.childFragmentManager)
+                if (currentChildFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
+                    return popToPreviousFragment(currentChildFragment, currentContainerFragment)
                 }
             } else if (tabsNavigator.getCurrentTabIndex() != 0) { // Check if tabs have navigation history TODO handle multiple tab history
                 tabsNavigator.switchToTab(0) // Switch to first tab
@@ -286,26 +321,39 @@ object FragmentOperator {
         }
 
         // Pop main backstack
-        return popToPreviousFragment(currentFragment, activity.supportFragmentManager)
+        return popToPreviousFragment(currentFragment, activity)
     }
 
-    fun handleTabPopToRootFragment() {
+    /**
+     * Container child fragment handle click or
+     * container fragment pop to root fragment
+     * @return True if successfully navigate back to root fragment, false if already on root fragment
+     */
+    fun handleTabClick() :Boolean{
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
-        if (tabsNavigator != null && currentContainerFragment != null) {
+        if (tabsNavigator != null && currentContainerFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
+            val childFragmentHandleTabClick =
+                    currentContainerFragment.getCurrentChildFragment()?.onContainerSelect() ?: false
+            if (childFragmentHandleTabClick) {
+                //child fragment has handled tab click
+                return false
+            }
+
             // Check if current tab has more than one fragments
             if (currentContainerFragment.childFragmentManager.backStackEntryCount > 1) {
                 currentContainerFragment.getRootChildFragmentTag()?.let { childFragmentTag ->
-                    popToFragment(currentContainerFragment.childFragmentManager, childFragmentTag)
+                    return popToFragment(currentContainerFragment, childFragmentTag)
                 }
             }
         }
+        return false
     }
 
-    private fun popToPreviousFragment(fragment: FoFragment, fragmentManager: FragmentManager): Boolean {
+    private fun popToPreviousFragment(fragment: FoFragment, fragmentHost: FragmentHost): Boolean {
         val previousFragmentTag = fragment.previousFragmentTag
         if (previousFragmentTag != null) {
-            return popToFragment(fragmentManager, previousFragmentTag)
+            return popToFragment(fragmentHost, previousFragmentTag)
         }
         return false
     }
@@ -347,13 +395,15 @@ object FragmentOperator {
      * @param fragment The fragment instance to
      * @return Previous fragment tag of existing instance if exists in back stack
      */
-    private fun handleSingleInstanceFragment(fragmentManager: FragmentManager, fragment: FoFragment): String? {
+    private fun handleSingleInstanceFragment(fragmentHost: FragmentHost,
+                                             fragment: FoFragment): String? {
+
         if (hasAnnotation(fragment::class.java, SingleInstanceFragment::class.java)) {
-            val frag = findFragmentInBackStack(fragmentManager, fragment::class.java)
+            val frag = findFragmentInBackStack(fragmentHost.getHostFragmentManager(), fragment::class.java)
             val previousFragmentTag = frag?.previousFragmentTag
             if (previousFragmentTag != null) {
                 // If we already have an instance in backstack, pop to the previous one and load the new instance later
-                popToFragment(fragmentManager, previousFragmentTag)
+                popToFragment(fragmentHost, previousFragmentTag)
                 return frag.previousFragmentTag
             }
         }
@@ -376,7 +426,7 @@ object FragmentOperator {
     /**
      * Pop to a fragment with specific tag
      */
-    private fun popToFragment(fragmentManager: FragmentManager, fragmentTag: String): Boolean {
+    private fun popToFragment(fragmentHost: FragmentHost, fragmentTag: String): Boolean {
         val activity = getCurrentActivity() ?: kotlin.run {
             FoLog.d(TAG, "popToFragment fail due to current activity is null")
             return false
@@ -387,9 +437,12 @@ object FragmentOperator {
             return false
         }
 
+        val fragmentManager = fragmentHost.getHostFragmentManager()
+
         if (fragmentManager.findFragmentByTag(fragmentTag) != null) {
             FoLog.d(TAG, "popToFragment found tag: $fragmentTag")
-            fragmentManager.popBackStack(fragmentTag, 0)
+
+            fragmentHost.handlePopBackStack(fragmentTag, 0)
             return true
         } else {
             FoLog.d(TAG, "popToFragment tag not found: $fragmentTag")
