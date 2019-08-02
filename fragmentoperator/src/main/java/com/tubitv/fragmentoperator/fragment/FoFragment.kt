@@ -67,6 +67,12 @@ open class FoFragment : Fragment(), FragmentHost {
         return false
     }
 
+    /**
+     * A method to handle {@link FragmentOperator#showDialogFragmentForResult}.
+     * When the dialog dismissed the result will be passed.
+     */
+    open fun onDialogFragmentResult(requestCode: Int, resultCode: Int, data: Map<String, Any>?) {}
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {

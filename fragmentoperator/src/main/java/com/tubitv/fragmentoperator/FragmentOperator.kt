@@ -248,6 +248,27 @@ object FragmentOperator {
         dialog.show(activity.supportFragmentManager, dialog.getDialogTag())
     }
 
+    /**
+     * Display the dialog for which you would like a result when it dismissed
+     * and adding the fragment to the activity supportFragmentManager.
+     *
+     * @param dialog FoDialog, want to display
+     * @param requestCode this code will be returned in {@link FoFragment#onDialogFragmentResult} when the dialog is dismissed.
+     */
+    fun showDialogFragmentForResult(dialog: FoDialog, requestCode: Int) {
+        val activity = getCurrentActivity() ?: return
+
+        var currentFragment =
+                getCurrentFragment(activity.supportFragmentManager, activity.getFragmentContainerResId()) ?: return
+
+        if (currentFragment is TabsNavigator) {
+            currentFragment = currentFragment.getCurrentContainerFragment()?.getCurrentChildFragment() ?: return
+        }
+        dialog.setTargetAndCode(currentFragment, requestCode)
+
+        showDialog(dialog)
+    }
+
     fun handlePendingChildFragments(containerFragment: FoFragment) {
         if (!mPendingChildFragmentList.isEmpty()) {
             for (fragment in mPendingChildFragmentList) {
@@ -381,6 +402,30 @@ object FragmentOperator {
         }
 
         return null
+    }
+
+    /**
+     * find a FoFragment by tag
+     *
+     * @param tag the fragment tag which is identified when inflated from XML or as supplied when added in a transaction.
+     * @return Can be null if no FoFragment is found.
+     */
+    fun findFoFragmentByTag(tag: String): FoFragment? {
+        val activity = getCurrentActivity() ?: return null
+
+        var targetFragment = activity.supportFragmentManager.findFragmentByTag(tag)
+        if (targetFragment != null) return targetFragment as? FoFragment
+
+        targetFragment =
+                getCurrentFragment(activity.supportFragmentManager, activity.getFragmentContainerResId()) ?: return null
+
+        if (targetFragment is TabsNavigator) {
+            val containerFragment = targetFragment.getCurrentContainerFragment() ?: return null
+            targetFragment = containerFragment.getHostFragmentManager().findFragmentByTag(tag)
+
+            return targetFragment as? FoFragment
+        }
+        return if ((targetFragment as? FoFragment)?.getFragmentTag() == tag) targetFragment else null
     }
 
     private fun getCurrentActivity(): FoActivity? {
