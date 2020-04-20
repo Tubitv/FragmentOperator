@@ -1,15 +1,15 @@
 package com.tubitv.fragmentoperator.demo.fragment
 
-import android.databinding.DataBindingUtil
 import android.graphics.PorterDuff
 import android.os.Bundle
-import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TabWidget
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.databinding.DataBindingUtil
 import com.tubitv.fragmentoperator.demo.R
 import com.tubitv.fragmentoperator.demo.databinding.FragmentMainBinding
 import com.tubitv.fragmentoperator.demo.databinding.TabItemBinding
@@ -36,7 +36,8 @@ class MainFragment : FoFragment(), TabsNavigator {
         mBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_main, container, false)
 
         // Setup tabhost
-        mBinding.tabhost.setup(activity, childFragmentManager, android.R.id.tabcontent)
+        val fragmentContext = context
+        fragmentContext?.let { mBinding.tabhost.setup(fragmentContext, childFragmentManager, android.R.id.tabcontent) }
         mBinding.tabhost.tabWidget.showDividers = TabWidget.SHOW_DIVIDER_NONE
 
         // Setup models to populate tabs
@@ -59,12 +60,12 @@ class MainFragment : FoFragment(), TabsNavigator {
 
     override fun onResume() {
         super.onResume()
-        FragmentOperator.registerTabsNavigator(this)
+        FragmentOperator.registerTabsNavigator(this, this)
     }
 
     override fun onPause() {
         super.onPause()
-        FragmentOperator.unregisterTabsNavigator()
+        FragmentOperator.unregisterTabsNavigator(this)
     }
 
     override fun getCurrentTabIndex(): Int {
@@ -92,6 +93,12 @@ class MainFragment : FoFragment(), TabsNavigator {
         }
 
         mBinding.tabhost.currentTab = index
+    }
+
+    override fun repopulateTabs() {
+        // Recreate fragment with updated TabsViewModel
+        setupTabsViewModel()
+        FragmentOperator.showFragment(MainFragment(), clearStack = true)
     }
 
     private fun setupTabsViewModel() {
