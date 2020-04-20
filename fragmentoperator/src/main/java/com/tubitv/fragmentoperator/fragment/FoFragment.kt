@@ -1,9 +1,9 @@
 package com.tubitv.fragmentoperator.fragment
 
 import android.os.Bundle
-import android.support.annotation.IdRes
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import androidx.annotation.IdRes
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.tubitv.fragmentoperator.interfaces.FragmentHost
 import com.tubitv.fragmentoperator.models.FoModels
 import com.tubitv.fragments.FragmentOperator
@@ -66,6 +66,12 @@ open class FoFragment : Fragment(), FragmentHost {
     open fun onContainerSelect(): Boolean {
         return false
     }
+
+    /**
+     * A method to handle {@link FragmentOperator#showDialogFragmentForResult}.
+     * When the dialog dismissed the result will be passed.
+     */
+    open fun onDialogFragmentResult(requestCode: Int, resultCode: Int, data: Map<String, Any>?) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
