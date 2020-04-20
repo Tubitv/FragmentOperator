@@ -1,6 +1,6 @@
 package com.tubitv.fragmentoperator.interfaces
 
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.FragmentManager
 import com.tubitv.fragmentoperator.logging.FoLog
 import com.tubitv.fragmentoperator.models.FoModels
 

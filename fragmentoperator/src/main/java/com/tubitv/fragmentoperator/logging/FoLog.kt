@@ -16,6 +16,13 @@ class FoLog {
         }
 
         @JvmStatic
+        fun i(tag: String, message: String) {
+            if (tag != null && message != null) {
+                Log.i(tag, message)
+            }
+        }
+
+        @JvmStatic
         fun w(tag: String?, throwable: Throwable) {
             if (BuildConfig.DEBUG && tag != null) {
                 Log.w(tag, throwable)

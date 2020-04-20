@@ -2,9 +2,9 @@ package com.tubitv.fragments
 
 import android.content.Intent
 import android.os.Build
-import android.support.annotation.IdRes
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
+import androidx.annotation.IdRes
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import com.tubitv.fragmentoperator.activity.FoActivity
 import com.tubitv.fragmentoperator.dialog.FoDialog
 import com.tubitv.fragmentoperator.fragment.FoFragment
@@ -33,6 +33,7 @@ object FragmentOperator {
 
     private var mActivityRef: WeakReference<FoActivity>? = null
     private var mTabsNavigator: TabsNavigator? = null
+    private var mTabsHostFragmentTag: String? = null
     private val mPendingChildFragmentList: MutableList<FoFragment> = ArrayList()
 
     /**
@@ -42,12 +43,15 @@ object FragmentOperator {
         mActivityRef = WeakReference(activity)
     }
 
-    fun registerTabsNavigator(tabsNavigator: TabsNavigator) {
+    fun registerTabsNavigator(tabsNavigator: TabsNavigator, hostFragment: FoFragment) {
         mTabsNavigator = tabsNavigator
+        mTabsHostFragmentTag = hostFragment.getFragmentTag()
     }
 
-    fun unregisterTabsNavigator() {
-        mTabsNavigator = null
+    fun unregisterTabsNavigator(hostFragment: FoFragment) {
+        if (hostFragment.getFragmentTag() == mTabsHostFragmentTag) {
+            mTabsNavigator = null
+        }
     }
 
     fun getTabsNavigator(): TabsNavigator? {
@@ -201,7 +205,7 @@ object FragmentOperator {
 
         // Once fragment tag is set to transaction, it doesn't change and always refers to the specific fragment.
         // Fragment tag will stay the same even when fragment got recreated
-        fragmentTransaction.replace(containerId, fragment, fragmentTag) // Set tag for retrieve in findFragmentByTag
+        fragmentTransaction.replace(containerId, fragment, fragmentTag) // Set tag for retrieve in findActiveFragmentByTag
         fragmentTransaction.addToBackStack(fragmentTag) // Reuse the same tag for fragment name
 
         fragment.skipOnPop = skipOnPop
@@ -248,6 +252,20 @@ object FragmentOperator {
         dialog.show(activity.supportFragmentManager, dialog.getDialogTag())
     }
 
+    /**
+     * Display the dialog for which you would like a result when it dismissed
+     * and adding the fragment to the activity supportFragmentManager.
+     *
+     * @param dialog FoDialog, want to display
+     * @param targetFragment target Fragment, want to handle result
+     * @param requestCode this code will be returned in {@link FoFragment#onDialogFragmentResult} when the dialog is dismissed.
+     */
+    fun showDialogFragmentForResult(dialog: FoDialog, targetFragment: FoFragment, requestCode: Int) {
+        dialog.setTargetAndCode(targetFragment, requestCode)
+
+        showDialog(dialog)
+    }
+
     fun handlePendingChildFragments(containerFragment: FoFragment) {
         if (!mPendingChildFragmentList.isEmpty()) {
             for (fragment in mPendingChildFragmentList) {
@@ -264,7 +282,7 @@ object FragmentOperator {
      */
     fun onBackPressed(): Boolean {
         // TODO handle child fragment backstack
-        val activity = getCurrentActivity() ?: kotlin.run {
+        val activity = getCurrentActivity() ?: run {
             FoLog.d(TAG, "handle onBackPressed fail due to current activity is null")
             return false
         }
@@ -275,12 +293,12 @@ object FragmentOperator {
         }
 
         val currentFragment = getCurrentFragment(activity.supportFragmentManager, activity.getFragmentContainerResId())
-                ?: kotlin.run {
+                ?: run {
                     FoLog.d(TAG, "handle onBackPressed fail due to current fragment is null")
                     return false
                 }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && currentFragment.isStateSaved) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && currentFragment.isStateSaved) {
             FoLog.d(TAG, "The current Fragment Manager has saved its states already")
             return false
         }
@@ -329,7 +347,7 @@ object FragmentOperator {
      * container fragment pop to root fragment
      * @return True if successfully navigate back to root fragment, false if already on root fragment
      */
-    fun handleTabClick() :Boolean{
+    fun handleTabClick(): Boolean {
         val tabsNavigator = mTabsNavigator
         val currentContainerFragment = mTabsNavigator?.getCurrentContainerFragment()
         if (tabsNavigator != null && currentContainerFragment != null && currentContainerFragment.isReadyForFragmentOperation()) {
@@ -383,6 +401,40 @@ object FragmentOperator {
         return null
     }
 
+    /**
+     * find a FoFragment by tag.
+     * The target Fragment can be existed under an Activity(supportFragmentManager) or a Fragment(childFragmentManager).
+     *
+     * @param tag the fragment tag which is identified when inflated from XML or as supplied when added in a transaction.
+     * @return Can be null if no FoFragment is found.
+     */
+    fun findActiveFragmentByTag(tag: String): FoFragment? {
+        val activity = getCurrentActivity() ?: return null
+
+        var targetFragment = activity.getHostFragmentManager().findFragmentByTag(tag)
+        // If the target is found and it is FoFragment then return it or return null
+        if (targetFragment != null) return targetFragment as? FoFragment
+
+        // get current fragment which is showing in the activity's layout.
+        targetFragment =
+                getCurrentFragment(activity.getHostFragmentManager(), activity.getFragmentContainerResId()) ?: return null
+
+        if (targetFragment is TabsNavigator) {
+            val containerFragment = targetFragment.getCurrentContainerFragment() ?: return null
+            // find the target from the container
+            targetFragment = containerFragment.getHostFragmentManager().findFragmentByTag(tag)
+
+            // return the target if it is FoFragment or return null
+            return targetFragment as? FoFragment
+        }
+
+        // if currently showing fragment is the same as the tag and it is FoFragment return it or return null
+        return if ((targetFragment as? FoFragment)?.getFragmentTag() == tag) targetFragment else kotlin.run {
+            FoLog.d(TAG, "Fragment is not found or is not FoFragment")
+            return null
+        }
+    }
+
     private fun getCurrentActivity(): FoActivity? {
         return mActivityRef?.get()
     }
@@ -427,7 +479,7 @@ object FragmentOperator {
      * Pop to a fragment with specific tag
      */
     private fun popToFragment(fragmentHost: FragmentHost, fragmentTag: String): Boolean {
-        val activity = getCurrentActivity() ?: kotlin.run {
+        val activity = getCurrentActivity() ?: run {
             FoLog.d(TAG, "popToFragment fail due to current activity is null")
             return false
         }
@@ -456,7 +508,7 @@ object FragmentOperator {
      * Find fragment instance with give fragment class
      */
     private fun findFragmentInBackStack(fragmentManager: FragmentManager, fragmentClass: Class<*>): FoFragment? {
-        val activity = getCurrentActivity() ?: kotlin.run {
+        val activity = getCurrentActivity() ?: run {
             FoLog.d(TAG, "findFragmentInBackStack fail due to current activity is null")
             return null
         }

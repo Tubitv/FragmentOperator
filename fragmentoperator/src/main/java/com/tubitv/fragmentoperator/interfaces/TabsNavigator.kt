@@ -11,4 +11,6 @@ interface TabsNavigator {
     fun isTabIndexValid(tabIndex: Int): Boolean
     
     fun switchToTab(index: Int)
+
+    fun repopulateTabs()
 }

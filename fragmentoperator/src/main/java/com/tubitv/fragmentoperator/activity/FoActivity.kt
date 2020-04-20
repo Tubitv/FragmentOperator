@@ -2,8 +2,8 @@ package com.tubitv.fragmentoperator.activity
 
 import android.os.Bundle
 import android.os.PersistableBundle
-import android.support.v4.app.FragmentManager
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentManager
 import com.tubitv.fragmentoperator.interfaces.FragmentHost
 import com.tubitv.fragments.FragmentOperator
 
@@ -46,7 +46,8 @@ abstract class FoActivity : AppCompatActivity(), FragmentHost {
     }
 
     override fun onBackPressed() {
-        if (!FragmentOperator.onBackPressed()) {
+        // Only let activity handles backPress if FragmentOperator doesn't handle and FragmentManager is ready
+        if (!FragmentOperator.onBackPressed() && mFragmentManagerPrepared) {
             super.onBackPressed()
         }
     }

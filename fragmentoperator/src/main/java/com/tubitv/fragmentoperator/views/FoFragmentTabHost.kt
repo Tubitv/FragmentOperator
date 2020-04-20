@@ -2,8 +2,8 @@ package com.tubitv.fragmentoperator.views
 
 import android.app.Activity
 import android.content.Context
-import android.support.v4.app.FragmentTabHost
 import android.util.AttributeSet
+import androidx.fragment.app.FragmentTabHost
 import com.tubitv.fragmentoperator.logging.FoLog
 
 

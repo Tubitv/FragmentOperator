@@ -1,8 +1,8 @@
 package com.tubitv.fragmentoperator.models
 
 import android.os.Build
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.tubitv.fragmentoperator.fragment.FoFragment
 import com.tubitv.fragmentoperator.logging.FoLog
 
@@ -62,10 +62,7 @@ class FragmentManagerModels {
     fun <T : Any> get(fragment: FoFragment, key: String): T? {
         val tag = fragment.getFragmentTag()
 
-        if (tag != null) {
-            return mModels[tag]?.get(key) as? T
-        }
-        return null
+        return mModels[tag]?.get(key) as? T
     }
 
     /**
@@ -114,7 +111,8 @@ class FragmentManagerModels {
         FoLog.d(TAG, "After cleanUp models map size: " + mModels.size)
     }
 
-    private fun copyDataForFragment(updateMap: HashMap<String, HashMap<String, Any>>, fragment: Fragment?) {
+    private fun copyDataForFragment(updateMap: HashMap<String, HashMap<String, Any>>,
+                                    fragment: Fragment?) {
         (fragment as? FoFragment)?.let { foFragment ->
             foFragment.getFragmentTag()?.let { tag ->
                 mModels[tag]?.let { data ->
